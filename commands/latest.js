@@ -45,14 +45,41 @@ module.exports = {
             results.forEach(item => {
                 if (item && item.platform) {
                     const platformName = item.platform.charAt(0).toUpperCase() + item.platform.slice(1);
-                    // Explicitly show link as requested
+                    // Explicitly show raw link as requested
                     embed.addFields({
                         name: platformName,
-                        value: `**${item.title}**\n[View Post](${item.link})`,
+                        value: `**${item.title}**\nLink: ${item.link}`,
                         inline: false
                     });
                 }
             });
+
+            // Add a footer note about missing platforms
+            const foundPlatforms = results.filter(r => r).map(r => r.platform);
+            const missingPlatforms = platformsToFetch.filter(p => !foundPlatforms.includes(p));
+
+            if (missingPlatforms.length > 0) {
+                // 1. Public Message: Generic "Updating" notice (Using Field design as requested)
+                const linksList = missingPlatforms.map(p => {
+                    const url = config.profiles[p];
+                    const name = p.charAt(0).toUpperCase() + p.slice(1);
+                    return url ? `• [${name}](${url})` : `• ${name}`;
+                }).join('\n');
+
+                embed.addFields({
+                    name: '⚠️ Syncing in Progress',
+                    value: `Some platforms are currently updating. Please wait for the next cycle.\n\n**If you want to visit the profile and see the latest:**\n${linksList}`,
+                    inline: false
+                });
+
+                // 2. Private Message: Notify Owner
+                try {
+                    const owner = await interaction.guild.fetchOwner();
+                    await owner.send(`🚨 **Bot Status Report**\nThe following platforms failed to fetch in \`/latest all\`:\n- ${missingPlatforms.join('\n- ')}\n\nPlease check the server logs or update the manual links if necessary.`);
+                } catch (e) {
+                    console.error(`Failed to send DM to owner: ${e.message}`);
+                }
+            }
 
             await interaction.editReply({ embeds: [embed] });
 
