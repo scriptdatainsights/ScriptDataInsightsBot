@@ -29,16 +29,19 @@ module.exports = {
 
         if (platformChoice === 'all') {
             const platformsToFetch = ['youtube', 'blogger', 'tumblr', 'bluesky', 'x', 'threads', 'linkedin', 'facebook', 'instagram'];
+            const results = [];
 
-            // Use Promise.allSettled to fetch in parallel and not fail if one fails
-            const promises = platformsToFetch.map(p => fetchLatest(p));
-            const results = await Promise.allSettled(promises);
+            // Fetch sequentially to avoid overloading the free tier server with multiple Chrome instances
+            for (const p of platformsToFetch) {
+                try {
+                    const res = await fetchLatest(p);
+                    if (res) results.push(res);
+                } catch (e) {
+                    console.error(`Failed to fetch ${p}:`, e);
+                }
+            }
 
-            const validResults = results
-                .filter(r => r.status === 'fulfilled' && r.value)
-                .map(r => r.value);
-
-            if (validResults.length === 0) {
+            if (results.length === 0) {
                 return interaction.editReply('Could not fetch any latest posts from configured platforms.');
             }
 
@@ -47,7 +50,7 @@ module.exports = {
                 .setTitle('📢 Latest Updates Across Platforms')
                 .setTimestamp();
 
-            validResults.forEach(item => {
+            results.forEach(item => {
                 if (item && item.platform) {
                     const platformName = item.platform.charAt(0).toUpperCase() + item.platform.slice(1);
                     embed.addFields({

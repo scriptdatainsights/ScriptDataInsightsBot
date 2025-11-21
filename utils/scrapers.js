@@ -37,8 +37,8 @@ const scrapeSocial = async (url, platform) => {
             }
         });
 
-        // Use domcontentloaded for faster "success" signal, and increase timeout to 60s
-        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+        // Use domcontentloaded for faster "success" signal, and timeout after 30s
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
         const pageTitle = await page.title();
         console.log(`Page Title for ${platform}: ${pageTitle}`);
