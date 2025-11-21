@@ -4,6 +4,7 @@ const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
 const config = require('../config.json');
+const { scrapeSocial } = require('./scrapers');
 
 const parser = new Parser();
 const dataPath = path.join(__dirname, '../data/latest_posts.json');
@@ -115,12 +116,23 @@ const fetchLatest = async (platform) => {
         }
         // FACEBOOK / INSTAGRAM
         else if (platform === 'facebook' || platform === 'instagram') {
+            // Try API first
             if (process.env.FB_ACCESS_TOKEN && process.env.FB_PAGE_ID) {
-                const fields = 'message,permalink_url,created_time';
-                const fbUrl = `https://graph.facebook.com/v19.0/${process.env.FB_PAGE_ID}/feed?fields=${fields}&access_token=${process.env.FB_ACCESS_TOKEN}&limit=1`;
-                const resp = await axios.get(fbUrl);
-                const post = resp.data.data[0];
-                return { platform, title: post.message || 'New Post', link: post.permalink_url, date: post.created_time };
+                try {
+                    const fields = 'message,permalink_url,created_time';
+                    const fbUrl = `https://graph.facebook.com/v19.0/${process.env.FB_PAGE_ID}/feed?fields=${fields}&access_token=${process.env.FB_ACCESS_TOKEN}&limit=1`;
+                    const resp = await axios.get(fbUrl);
+                    const post = resp.data.data[0];
+                    return { platform, title: post.message || 'New Post', link: post.permalink_url, date: post.created_time };
+                } catch (e) {
+                    console.log('FB API failed, trying scraper...');
+                }
+            }
+
+            // Fallback to Scraper
+            const profileUrl = config.profiles[platform];
+            if (profileUrl) {
+                return await scrapeSocial(profileUrl, platform);
             }
         }
     } catch (e) {

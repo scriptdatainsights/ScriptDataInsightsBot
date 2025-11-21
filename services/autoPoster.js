@@ -26,18 +26,12 @@ const startAutoPoster = (client) => {
     const checkAndPost = async () => {
         console.log('Auto-Poster: Checking for new content...');
 
-        // Find the target channel (e.g., 'updates', 'announcements', or system channel)
-        const guild = client.guilds.cache.first(); // Assuming single server for now
-        if (!guild) return;
-
-        const channel = guild.channels.cache.find(c =>
-            c.name.includes('updates') ||
-            c.name.includes('announcements') ||
-            c.name.includes('news')
-        ) || guild.systemChannel;
+        // Target specific channel ID provided by user
+        const targetChannelId = '1440531529183793202';
+        const channel = await client.channels.fetch(targetChannelId).catch(() => null);
 
         if (!channel) {
-            console.log('Auto-Poster: No suitable channel found.');
+            console.log(`Auto-Poster: Target channel ${targetChannelId} not found.`);
             return;
         }
 
