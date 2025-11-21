@@ -1,0 +1,27 @@
+{
+  "profiles": {
+    "youtube": "https://www.youtube.com/@ScriptDataInsights/",
+    "instagram": "https://www.instagram.com/scriptdatainsights/",
+    "facebook": "https://www.facebook.com/people/SD-Insights/61577756813312/",
+    "linkedin": "https://www.linkedin.com/in/script-data-insights/",
+    "blogger": "https://scriptdatainsights.blogspot.com/",
+    "bluesky": "https://bsky.app/profile/scriptdatainsights.bsky.social",
+    "x": "https://x.com/insightsbysd",
+    "threads": "https://www.threads.com/@scriptdatainsights",
+    "tumblr": "https://www.tumblr.com/blog/scriptdatainsights"
+  },
+  "schedule": [
+    { "time": "3:00 AM", "topic": "Excel", "type": "Shorts/Reels" },
+    { "time": "6:00 AM", "topic": "Excel", "type": "Post" },
+    { "time": "9:00 AM", "topic": "AI", "type": "Shorts/Reels" },
+    { "time": "12:00 PM", "topic": "AI", "type": "Post" },
+    { "time": "3:00 PM", "topic": "Coding", "type": "Shorts/Reels" },
+    { "time": "6:00 PM", "topic": "Coding", "type": "Post" },
+    { "time": "9:00 PM", "topic": "Earning", "type": "Shorts/Reels" },
+    { "time": "12:00 AM", "topic": "Earning", "type": "Post" }
+  ],
+  "video_schedule": "Daily video time: 12:00 AM or 12:00 PM",
+  "rss_feeds": [
+    "https://scriptdatainsights.blogspot.com/feeds/posts/default?alt=rss"
+  ]
+}
