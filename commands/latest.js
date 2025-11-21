@@ -29,16 +29,39 @@ module.exports = {
 
         if (platformChoice === 'all') {
             const platformsToFetch = ['youtube', 'blogger', 'tumblr', 'bluesky', 'x', 'threads', 'linkedin', 'facebook', 'instagram'];
-            const results = [];
 
-            for (const p of platformsToFetch) {
-                const res = await fetchLatest(p);
-                if (res) results.push(res);
-            }
+            // Use Promise.allSettled to fetch in parallel and not fail if one fails
+            const promises = platformsToFetch.map(p => fetchLatest(p));
+            const results = await Promise.allSettled(promises);
 
-            if (results.length === 0) {
+            const validResults = results
+                .filter(r => r.status === 'fulfilled' && r.value)
+                .map(r => r.value);
+
+            if (validResults.length === 0) {
                 return interaction.editReply('Could not fetch any latest posts from configured platforms.');
             }
+
+            const embed = new EmbedBuilder()
+                .setColor(0x0099FF)
+                .setTitle('📢 Latest Updates Across Platforms')
+                .setTimestamp();
+
+            validResults.forEach(item => {
+                if (item && item.platform) {
+                    const platformName = item.platform.charAt(0).toUpperCase() + item.platform.slice(1);
+                    embed.addFields({
+                        name: platformName,
+                        value: `[${item.title}](${item.link})`,
+                        inline: false
+                    });
+                }
+            });
+
+            await interaction.editReply({ embeds: [embed] });
+
+        } else {
+            // Single platform logic
             const result = await fetchLatest(platformChoice);
 
             if (result) {
