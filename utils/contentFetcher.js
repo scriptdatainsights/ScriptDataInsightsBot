@@ -100,18 +100,35 @@ const fetchLatest = async (platform) => {
         }
         // TWITTER / X
         else if (platform === 'x') {
+            // Try API first if token exists
             if (process.env.TWITTER_BEARER_TOKEN) {
-                const username = 'insightsbysd';
-                const userResp = await axios.get(`https://api.twitter.com/2/users/by/username/${username}`, {
-                    headers: { Authorization: `Bearer ${process.env.TWITTER_BEARER_TOKEN}` }
-                });
-                const userId = userResp.data.data.id;
-                const tweets = await axios.get(`https://api.twitter.com/2/users/${userId}/tweets?max_results=5`, {
-                    headers: { Authorization: `Bearer ${process.env.TWITTER_BEARER_TOKEN}` }
-                });
-                const tweet = tweets.data.data[0];
-                const cleanTitle = tweet.text.length > 100 ? tweet.text.substring(0, 97) + '...' : tweet.text;
-                return { platform, title: cleanTitle, link: `https://twitter.com/${username}/status/${tweet.id}`, date: new Date() };
+                try {
+                    const username = 'insightsbysd';
+                    const userResp = await axios.get(`https://api.twitter.com/2/users/by/username/${username}`, {
+                        headers: { Authorization: `Bearer ${process.env.TWITTER_BEARER_TOKEN}` }
+                    });
+                    const userId = userResp.data.data.id;
+                    const tweets = await axios.get(`https://api.twitter.com/2/users/${userId}/tweets?max_results=5`, {
+                        headers: { Authorization: `Bearer ${process.env.TWITTER_BEARER_TOKEN}` }
+                    });
+                    const tweet = tweets.data.data[0];
+                    const cleanTitle = tweet.text.length > 100 ? tweet.text.substring(0, 97) + '...' : tweet.text;
+                    return { platform, title: cleanTitle, link: `https://twitter.com/${username}/status/${tweet.id}`, date: new Date() };
+                } catch (e) {
+                    console.log('Twitter API failed, trying scraper...');
+                }
+            }
+            // Fallback to Scraper
+            const profileUrl = config.profiles[platform];
+            if (profileUrl) {
+                return await scrapeSocial(profileUrl, platform);
+            }
+        }
+        // LINKEDIN / THREADS
+        else if (platform === 'linkedin' || platform === 'threads') {
+            const profileUrl = config.profiles[platform];
+            if (profileUrl) {
+                return await scrapeSocial(profileUrl, platform);
             }
         }
         // FACEBOOK / INSTAGRAM
