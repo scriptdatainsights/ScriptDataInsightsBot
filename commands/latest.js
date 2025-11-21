@@ -39,23 +39,6 @@ module.exports = {
             if (results.length === 0) {
                 return interaction.editReply('Could not fetch any latest posts from configured platforms.');
             }
-
-            const embed = new EmbedBuilder()
-                .setColor(0x0099FF)
-                .setTitle('📢 Latest Updates Across Platforms')
-                .setTimestamp();
-
-            results.forEach(item => {
-                embed.addFields({
-                    name: item.platform.toUpperCase(),
-                    value: `[${item.title}](${item.link})`,
-                    inline: false
-                });
-            });
-
-            await interaction.editReply({ embeds: [embed] });
-
-        } else {
             const result = await fetchLatest(platformChoice);
 
             if (result) {

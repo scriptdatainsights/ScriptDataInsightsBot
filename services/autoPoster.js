@@ -44,19 +44,6 @@ const startAutoPoster = (client) => {
                 if (latest && latest.link) {
                     // Check if this link was already posted
                     if (history[platform] !== latest.link) {
-                        console.log(`Auto-Poster: New content found for ${platform}!`);
-
-                        const embed = new EmbedBuilder()
-                            .setColor(0x00FF00)
-                            .setTitle(`🚨 New ${platform.charAt(0).toUpperCase() + platform.slice(1)} Post!`)
-                            .setDescription(`**[${latest.title}](${latest.link})**`)
-                            .setTimestamp(new Date(latest.date))
-                            .setFooter({ text: 'Auto-posted by Script Data Insights Bot' });
-
-                        await channel.send({ embeds: [embed] });
-
-                        // Update history
-                        history[platform] = latest.link;
                         saveHistory();
                     }
                 }
