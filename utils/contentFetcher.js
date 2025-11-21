@@ -4,7 +4,7 @@ const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
 const config = require('../config.json');
-const { scrapeSocial } = require('./scrapers');
+const { scrapeSocial, scrapeAll } = require('./scrapers');
 
 const parser = new Parser();
 const dataPath = path.join(__dirname, '../data/latest_posts.json');
@@ -159,7 +159,7 @@ const fetchLatest = async (platform) => {
     return null;
 };
 
-const { scrapeSocial, scrapeAll } = require('./scrapers');
+
 
 // ... (existing code) ...
 
