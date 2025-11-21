@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const config = require('../config.json');
-const { fetchLatest } = require('../utils/contentFetcher');
+const { fetchLatest, fetchAllLatest } = require('../utils/contentFetcher');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -29,17 +29,9 @@ module.exports = {
 
         if (platformChoice === 'all') {
             const platformsToFetch = ['youtube', 'blogger', 'tumblr', 'bluesky', 'x', 'threads', 'linkedin', 'facebook', 'instagram'];
-            const results = [];
 
-            // Fetch sequentially to avoid overloading the free tier server with multiple Chrome instances
-            for (const p of platformsToFetch) {
-                try {
-                    const res = await fetchLatest(p);
-                    if (res) results.push(res);
-                } catch (e) {
-                    console.error(`Failed to fetch ${p}:`, e);
-                }
-            }
+            // Use the new efficient batch fetcher
+            const results = await fetchAllLatest(platformsToFetch);
 
             if (results.length === 0) {
                 return interaction.editReply('Could not fetch any latest posts from configured platforms.');
@@ -53,9 +45,10 @@ module.exports = {
             results.forEach(item => {
                 if (item && item.platform) {
                     const platformName = item.platform.charAt(0).toUpperCase() + item.platform.slice(1);
+                    // Explicitly show link as requested
                     embed.addFields({
                         name: platformName,
-                        value: `[${item.title}](${item.link})`,
+                        value: `**${item.title}**\n[View Post](${item.link})`,
                         inline: false
                     });
                 }

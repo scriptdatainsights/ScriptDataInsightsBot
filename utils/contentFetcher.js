@@ -159,4 +159,52 @@ const fetchLatest = async (platform) => {
     return null;
 };
 
-module.exports = { fetchLatest };
+const { scrapeSocial, scrapeAll } = require('./scrapers');
+
+// ... (existing code) ...
+
+/**
+ * Fetches latest posts for multiple platforms efficiently.
+ * @param {string[]} platforms 
+ * @returns {Promise<Array<Object|null>>}
+ */
+const fetchAllLatest = async (platforms) => {
+    const scraperTargets = [];
+    const apiPromises = [];
+    const results = [];
+
+    // Separate platforms into Scraper vs API
+    for (const platform of platforms) {
+        // Check manual override first
+        // (Simplified logic: if manual exists, use it, otherwise check type)
+        // For brevity, we'll just check the platform type here.
+
+        if (['x', 'linkedin', 'threads', 'facebook', 'instagram'].includes(platform)) {
+            const url = config.profiles[platform];
+            if (url) {
+                scraperTargets.push({ url, platform });
+            }
+        } else {
+            // API/RSS platforms
+            apiPromises.push(fetchLatest(platform));
+        }
+    }
+
+    // Run API fetches in parallel
+    const apiResults = await Promise.allSettled(apiPromises);
+    apiResults.forEach(r => {
+        if (r.status === 'fulfilled' && r.value) results.push(r.value);
+    });
+
+    // Run Scraper batch (single browser)
+    if (scraperTargets.length > 0) {
+        const scraperResults = await scrapeAll(scraperTargets);
+        scraperResults.forEach(r => {
+            if (r) results.push(r);
+        });
+    }
+
+    return results;
+};
+
+module.exports = { fetchLatest, fetchAllLatest };
