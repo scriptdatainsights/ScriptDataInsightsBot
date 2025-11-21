@@ -16,12 +16,11 @@ const scrapeSocial = async (url, platform) => {
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--single-process',
-                '--no-zygote'
+                '--disable-gpu'
             ],
             ignoreHTTPSErrors: true
         });
+
         const page = await browser.newPage();
 
         // Set a realistic User-Agent to avoid immediate blocking
