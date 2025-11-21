@@ -45,8 +45,14 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(0x00FF00)
                     .setTitle(`Latest from ${platformChoice}`)
-                    .setDescription(`**[${result.title}](${result.link})**`)
-                    .setTimestamp(new Date(result.date));
+                    .setDescription(`**[${result.title}](${result.link})**`);
+
+                if (result.date && !isNaN(new Date(result.date).getTime())) {
+                    embed.setTimestamp(new Date(result.date));
+                } else {
+                    embed.setTimestamp();
+                }
+
                 await interaction.editReply({ embeds: [embed] });
             } else {
                 const url = config.profiles[platformChoice];

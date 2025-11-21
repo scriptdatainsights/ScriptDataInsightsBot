@@ -44,6 +44,24 @@ const startAutoPoster = (client) => {
                 if (latest && latest.link) {
                     // Check if this link was already posted
                     if (history[platform] !== latest.link) {
+                        console.log(`Auto-Poster: New content found for ${platform}!`);
+
+                        const embed = new EmbedBuilder()
+                            .setColor(0x00FF00)
+                            .setTitle(`🚨 New ${platform.charAt(0).toUpperCase() + platform.slice(1)} Post!`)
+                            .setDescription(`**[${latest.title}](${latest.link})**`)
+                            .setFooter({ text: 'Auto-posted by Script Data Insights Bot' });
+
+                        if (latest.date && !isNaN(new Date(latest.date).getTime())) {
+                            embed.setTimestamp(new Date(latest.date));
+                        } else {
+                            embed.setTimestamp();
+                        }
+
+                        await channel.send({ embeds: [embed] });
+
+                        // Update history
+                        history[platform] = latest.link;
                         saveHistory();
                     }
                 }
