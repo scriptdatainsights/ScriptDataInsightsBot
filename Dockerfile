@@ -13,6 +13,9 @@ RUN npm ci
 # Copy the rest of the application code
 COPY . .
 
+# Fix permissions for the pptruser
+RUN chown -R pptruser:pptruser /usr/src/app
+
 # Switch back to the non-root user provided by the image
 USER pptruser
 
