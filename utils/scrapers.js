@@ -16,17 +16,29 @@ const scrapeSocial = async (url, platform) => {
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-gpu'
+                '--disable-gpu',
+                '--disable-notifications'
             ],
             ignoreHTTPSErrors: true
         });
 
         const page = await browser.newPage();
 
-        // Set a realistic User-Agent to avoid immediate blocking
+        // Set a realistic User-Agent
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-        await page.goto(url, { waitUntil: 'networkidle2', timeout: 45000 });
+        // OPTIMIZATION: Block images, fonts, and stylesheets to save bandwidth and speed up loading
+        await page.setRequestInterception(true);
+        page.on('request', (req) => {
+            if (['image', 'stylesheet', 'font', 'media'].includes(req.resourceType())) {
+                req.abort();
+            } else {
+                req.continue();
+            }
+        });
+
+        // Use domcontentloaded for faster "success" signal, and increase timeout to 60s
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
         const pageTitle = await page.title();
         console.log(`Page Title for ${platform}: ${pageTitle}`);
@@ -34,13 +46,14 @@ const scrapeSocial = async (url, platform) => {
         let result = null;
 
         if (platform === 'facebook') {
-            // Facebook logic
             try {
                 if (pageTitle.includes('Log In') || pageTitle.includes('Log into')) {
                     console.log('Facebook login wall detected.');
                     return null;
                 }
-                await page.waitForSelector('div[role="article"]', { timeout: 5000 });
+                // Wait a bit for JS to render content since we used domcontentloaded
+                await new Promise(r => setTimeout(r, 3000));
+
                 result = await page.evaluate(() => {
                     const firstPost = document.querySelector('div[role="article"]');
                     if (!firstPost) return null;
@@ -55,13 +68,13 @@ const scrapeSocial = async (url, platform) => {
                 console.log('Facebook selector failed.');
             }
         } else if (platform === 'instagram') {
-            // Instagram logic
             try {
                 if (pageTitle.includes('Login')) {
                     console.log('Instagram login wall detected.');
                     return null;
                 }
-                await page.waitForSelector('article a[href^="/p/"], main a[href^="/p/"]', { timeout: 5000 });
+                await new Promise(r => setTimeout(r, 3000));
+
                 result = await page.evaluate(() => {
                     const firstPostLink = document.querySelector('article a[href^="/p/"]') || document.querySelector('main a[href^="/p/"]');
                     if (!firstPostLink) return null;
@@ -73,9 +86,8 @@ const scrapeSocial = async (url, platform) => {
                 console.log('Instagram selector failed.');
             }
         } else if (platform === 'x') {
-            // X (Twitter) logic
             try {
-                await page.waitForSelector('article[data-testid="tweet"]', { timeout: 10000 });
+                await new Promise(r => setTimeout(r, 3000));
                 result = await page.evaluate(() => {
                     const tweet = document.querySelector('article[data-testid="tweet"]');
                     if (!tweet) return null;
@@ -89,9 +101,8 @@ const scrapeSocial = async (url, platform) => {
                 console.log('X selector failed.');
             }
         } else if (platform === 'linkedin') {
-            // LinkedIn logic
             try {
-                await page.waitForSelector('.main-content, .core-rail', { timeout: 10000 });
+                await new Promise(r => setTimeout(r, 3000));
                 result = await page.evaluate(() => {
                     const post = document.querySelector('.profile-creator-shared-feed-update__container') || document.querySelector('.feed-shared-update-v2');
                     if (!post) return null;
@@ -104,14 +115,16 @@ const scrapeSocial = async (url, platform) => {
                 console.log('LinkedIn selector failed.');
             }
         } else if (platform === 'threads') {
-            // Threads logic
             try {
-                await page.waitForSelector('div[data-pressable-container="true"]', { timeout: 10000 });
+                await new Promise(r => setTimeout(r, 3000));
                 result = await page.evaluate(() => {
-                    const post = document.querySelector('div[data-pressable-container="true"]');
-                    if (!post) return null;
-                    const text = post.innerText.split('\n')[0];
-                    return { title: text || 'New Threads Post', link: window.location.href, date: new Date() };
+                    // Threads selectors are tricky, try to find any link in the feed
+                    const links = Array.from(document.querySelectorAll('a[href*="/post/"]'));
+                    if (links.length === 0) return null;
+
+                    const link = links[0].href;
+                    const text = links[0].innerText || 'New Threads Post';
+                    return { title: text, link: link, date: new Date() };
                 });
             } catch (e) {
                 console.log('Threads selector failed.');
