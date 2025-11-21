@@ -12,7 +12,15 @@ const scrapeSocial = async (url, platform) => {
     try {
         browser = await puppeteer.launch({
             headless: "new",
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--single-process',
+                '--no-zygote'
+            ],
+            ignoreHTTPSErrors: true
         });
         const page = await browser.newPage();
 
